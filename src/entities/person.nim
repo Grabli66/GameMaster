@@ -74,14 +74,6 @@ proc getPrompt*(pers: Person): Prompt =
 proc throwInitiative*(person: Person): int =
     return rand(100)
 
-# Получает ощущения персонажа
-proc getSensoryPerception*(person: Person): string =
-    let ai = ai_api.get()
-    let systemPrompt = fmt"Ты персонаж игры {person.name} {person.age} {person.character}"
-    let prompt = fmt"Ты стоишь по среди поля утром. Вокруг никого. Что видит, слышит, чувствует, ощущает?"    
-    let completeResult = ai.complete(@[systemPrompt], @[prompt])
-    return completeResult
-
 # Создает произвольного персонажа
 proc createRandomPerson*() : Person =
     let ai = ai_api.get()
@@ -137,14 +129,3 @@ proc createRandomPerson*() : Person =
     let personJson = parseJson(completeResult)
     let person = to(personJson, Person)
     return person
-
-# Тип для действий персонажа
-proc getActions*(person: Person): seq[PersonAction] =
-    let sensoryPerception= person.getSensoryPerception()
-    echo sensoryPerception
-    # let prompt = "Придумай произвольные действия для персонажа " & person.Name & " " & $person.Age & " " & $person.Character    
-    # let completeResult = ai.complete(@["Ты рассказчик"], @[prompt])
-
-    # let actionsJson = parseJson(completeResult)
-    # let actions = to(actionsJson, seq[PersonAction])
-    return @[] #actions

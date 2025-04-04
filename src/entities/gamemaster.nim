@@ -49,6 +49,25 @@ proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string
 
     return ""
 
+# Получает ощущения персонажа
+proc getSensoryPersonPerception(gm:GameMaster, person: Person): string =
+    let ai = ai_api.get()
+    let systemPrompt = person.getPrompt()    
+    var prompt = gm.currentScene.getPrompt()
+    let completeResult = ai.complete(systemPrompt, prompt)
+    return completeResult
+
+# Тип для действий персонажа
+proc getPersonActions(gm:GameMaster, pers: Person): seq[PersonAction] =
+    let sensoryPerception= gm.getSensoryPersonPerception(pers)
+    echo sensoryPerception
+    # let prompt = "Придумай произвольные действия для персонажа " & person.Name & " " & $person.Age & " " & $person.Character    
+    # let completeResult = ai.complete(@["Ты рассказчик"], @[prompt])
+
+    # let actionsJson = parseJson(completeResult)
+    # let actions = to(actionsJson, seq[PersonAction])
+    return @[] #actions
+
 # Создает нового мастера игры
 proc newGameMaster*(world:World, currentScene:Scene):GameMaster =
     result = GameMaster(world: world, currentScene: currentScene)
@@ -91,7 +110,7 @@ proc beginScene*(gm:GameMaster) : SceneStoryBatch =
         persWithActions.add(
             PersonWithActions(
                 person: pers[0], 
-                action: pers[0].getActions()))
+                action: gm.getPersonActions(pers[0])))
 
     return SceneStoryBatch(
         gameMaster: gm,
@@ -99,6 +118,8 @@ proc beginScene*(gm:GameMaster) : SceneStoryBatch =
 
 # Устанавливает ввод пользователя
 proc setUserInput*(ssb:SceneStoryBatch, input: string) =
+    # Разбивает ввод на атомарные действия
+
     discard
 
 # Завершает сцену и возвращает историю сцены
