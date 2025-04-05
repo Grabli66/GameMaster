@@ -8,6 +8,7 @@ import ../entities/[world, scene, person, location]
 import ../common/prompt
 import location_generator
 import person_generator
+import scene_generator
 
 # Персонаж с действиями
 type PersonWithActions = object
@@ -48,7 +49,7 @@ proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string
     var systemPrompt = newPrompt()
     systemPrompt.addLine("Ты мастер игры. Ты отвечаешь за проведение сцены.")
 
-    var scenePrompt = gm.currentScene.getPrompt()
+    var scenePrompt = getScenePrompt(gm.currentScene)
     for persWithAction in persWithActions:
         scenePrompt.addLine(fmt"Персонаж : {persWithAction.person.name}")
         for action in persWithAction.action:
@@ -59,8 +60,8 @@ proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string
 # Получает ощущения персонажа
 proc getSensoryPersonPerception(gm:GameMaster, person: Person): string =
     let ai = ai_api.get()
-    let systemPrompt = person.getPrompt()    
-    var prompt = gm.currentScene.getPrompt()
+    let systemPrompt = getPersonPrompt(person)    
+    var prompt = getScenePrompt(gm.currentScene)
     let completeResult = ai.complete(systemPrompt, prompt)
     return completeResult
 
@@ -90,11 +91,11 @@ proc startGame*(gm: var GameMaster):SceneStoryBatch =
     var systemPrompt: Prompt = newPrompt()
     systemPrompt.addLine("Do not use markdown, only plain text")
 
-    var scenePrompt: Prompt = gm.currentScene.getPrompt()
+    var scenePrompt: Prompt = getScenePrompt(gm.currentScene)
     scenePrompt.addLine(fmt"Художественно опиши начало сцены и персонажей без действий персонажей. Опиши главного персонажа.")
     let completeResult: string = ai.complete(systemPrompt, scenePrompt, some(CompleteOptions(
         temperature: some(0.08),
-        maxTokens: some(800),
+        maxTokens: some(10000),
         stream: some(false)
     )))
 

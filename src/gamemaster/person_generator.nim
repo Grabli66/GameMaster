@@ -1,10 +1,30 @@
 import json
 import options
 import random
+import strformat
+import strutils
 
 import ../ai_api/[types, ai_api]
 import ../entities/person
 import ../common/prompt
+
+# Получает prompt для персонажа
+proc getPersonPrompt*(pers: Person): Prompt =
+    var prompt = newPrompt()
+    if pers.isMain:
+        prompt.addLine(fmt"{pers.name} (главный персонаж)")
+    else:
+        prompt.addLine(fmt"{pers.name}")
+
+    prompt.addLine(fmt"Возраст: {pers.age}")
+    let character = pers.character.join(", ")
+    prompt.addLine(fmt"Внешность: {pers.look}")
+    prompt.addLine(fmt"Характер: {character}")
+    let motivation = pers.motivation.join(", ")
+    prompt.addLine(fmt"Хочет {motivation}")
+    let memory = pers.memory.join(", ")
+    prompt.addLine(fmt"Помнит что: {memory}")
+    return prompt
 
 # Кидает инициативу персонажу
 proc throwInitiative*(person: Person): int =

@@ -45,14 +45,3 @@ proc newScene*(
         currentArea: currentArea, 
         currentLocation: currentLocation, 
         currentPersons: currentPersons)
-
-# Получает prompt для сцены
-proc getPrompt*(scene: Scene): Prompt =
-    var prompt = newPrompt()
-    prompt.addLine(fmt"{scene.description}")
-    for pers in scene.currentPersons:
-        prompt.add(pers.getPrompt())
-    
-    prompt.addLine(fmt"{scene.currentArea.description}")
-    prompt.addLine(fmt"{scene.currentLocation.description}")
-    return prompt

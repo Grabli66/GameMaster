@@ -1,12 +1,3 @@
-import ../ai_api/[types, ai_api]
-import json
-import options
-import strformat
-import random
-import strutils
-
-import ../common/prompt
-
 # Тип для видов действий персонажа
 type PersonActionKind* = enum
     # Действие, которое требует ответа от игрока
@@ -30,6 +21,8 @@ type Person* = object
     name*: string
     # Возраст персонажа
     age*: int
+    # Внешность персонажа
+    look*: string
     # Характеристики персонажа
     character*: seq[string]
     # Мотивация персонажа: инстинкты, желания, цели
@@ -37,16 +30,12 @@ type Person* = object
     # Память персонажа
     memory*: seq[string]
 
-
-# Оператор для вывода персонажа
-proc `$`*(person: Person): string =
-    return person.name & " " & $person.age & " " & $person.character
-
 # Создает нового персонажа
 proc newPerson*(
         isMain:bool,
         name:string, 
         age:int, 
+        look:string,
         character:seq[string], 
         motivation:seq[string], 
         memory:seq[string]):Person =
@@ -54,21 +43,7 @@ proc newPerson*(
         isMain: isMain,
         name: name, 
         age: age, 
+        look: look,
         character: character, 
         motivation: motivation, 
         memory: memory)
-
-# Получает prompt для персонажа
-proc getPrompt*(pers: Person): Prompt =
-    var prompt = newPrompt()
-    if pers.isMain:
-        prompt.addLine(fmt"Главный персонаж Имя: {pers.name}. Возраст: {pers.age}")
-    else:
-        prompt.addLine(fmt"{pers.name}. Возраст: {pers.age}")
-    let character = pers.character.join(", ")
-    prompt.addLine(fmt"Характер: {character}")
-    let motivation = pers.motivation.join(", ")
-    prompt.addLine(fmt"Мотивация: {motivation}")
-    let memory = pers.memory.join(", ")
-    prompt.addLine(fmt"Помнит: {memory}")
-    return prompt
