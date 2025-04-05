@@ -9,7 +9,7 @@ proc newPrompt*(): Prompt =
 
 # Добавляет строку в prompt с переносом строки
 proc addLine*(prompt: var Prompt, line: string) =
-    prompt.add(fmt"{line}\n")
+    prompt.add(line)
 
 # Выводит prompt в консоль
 proc debug*(prompt: Prompt) =

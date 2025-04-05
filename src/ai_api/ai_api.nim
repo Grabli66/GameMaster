@@ -11,5 +11,5 @@ proc get*():IAiApi =
     if ai.isSome:
         return ai.get()
 
-    let ai = newOpenAiApi("http://localhost:1234", "ruadaptqwen2.5-14b-instruct-1m")
+    let ai = newOpenAiApi("http://localhost:1234")
     return ai

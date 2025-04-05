@@ -22,21 +22,41 @@ const
 type OpenAiApi = object
     # Модель для генерации текста
     model: string
-    # HTTP клиент для отправки запросов
-    client: HttpClient
     # Базовый URL API
     baseUrl: string
 
 # Допустимые модели
 let allowedModels = @[
+    "gemma-3-4b-it",
     "aya-23-8b",
     "hermes-3-llama-3.1-8b",
     "ruadaptqwen2.5-14b-instruct-1m"
 ]
 
+# Получает HTTP клиент
+proc getClient(): HttpClient =
+    result = newHttpClient()
+    result.headers = newHttpHeaders({
+        "Content-Type": "application/json"
+    })
+
+# Получает ответ от OpenAI API
+proc getCompletions(self: OpenAiApi, requestBody:string): string =
+    let client = getClient()
+    let response = client.post(self.baseUrl & "/v1/chat/completions", requestBody)
+    if response.status != HTTP_STATUS_OK:
+        raise newException(ValueError, fmt"API error: {response.body}")
+
+    if settings.isDebug:
+        echo fmt"ответ: {response.body}"
+
+    let jsonResponse = parseJson(response.body)
+    return jsonResponse["choices"][0]["message"]["content"].getStr()
+
 # Получает оптимальную модель для генерации текста
 proc getOptimalModel(self: OpenAiApi): Option[string] =
-    let response = self.client.get(fmt"{self.baseUrl}/v1/models")  
+    let client = getClient()
+    let response = client.get(fmt"{self.baseUrl}/v1/models")  
     if response.status != HTTP_STATUS_OK:
         raise newException(ValueError, fmt"API error: {response.body}")
 
@@ -94,22 +114,12 @@ proc complete(
 
     if settings.isDebug:
         echo fmt"запрос: {requestBody}"
-
-    let response = self.client.post(self.baseUrl & "/v1/chat/completions", $requestBody)    
-        
-    if response.status != HTTP_STATUS_OK:
-        raise newException(ValueError, fmt"API error: {response.body}")
-
-    if settings.isDebug:
-        echo fmt"ответ: {response.body}"
-
-    let jsonResponse = parseJson(response.body)
-    result = jsonResponse["choices"][0]["message"]["content"].getStr()
+    
+    return self.getCompletions($requestBody)
 
 # Создает новый API для работы с ИИ в формате с OpenAI
-proc newOpenAiApi*(baseUrl: string, model: string): IAiApi =    
-    var api = OpenAiApi(        
-        client: newHttpClient(),
+proc newOpenAiApi*(baseUrl: string): IAiApi =    
+    var api = OpenAiApi(
         baseUrl: baseUrl
     )
 
@@ -117,11 +127,7 @@ proc newOpenAiApi*(baseUrl: string, model: string): IAiApi =
     if model.isNone:
         raise newException(ValueError, "Не удалось получить оптимальную модель")
 
-    api.model = model.get()
-
-    api.client.headers = newHttpHeaders({
-        "Content-Type": "application/json"
-    })
+    api.model = model.get()    
     return IAiApi(
         complete: proc(
                 systemPrompt: seq[string], 

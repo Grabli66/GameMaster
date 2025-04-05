@@ -4,6 +4,7 @@ import times
 import world
 import person
 import area
+import location
 import ../common/prompt
 
 # Сцена для game master
@@ -54,3 +55,4 @@ proc getPrompt*(scene: Scene): Prompt =
     
     prompt.addLine(fmt"{scene.currentArea.description}")
     prompt.addLine(fmt"{scene.currentLocation.description}")
+    return prompt

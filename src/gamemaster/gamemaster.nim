@@ -1,12 +1,13 @@
-import ../ai_api/[types, ai_api]
 import strformat
 import options
 import algorithm
+import json
 
-import world
-import scene
-import person
+import ../ai_api/[types, ai_api]
+import ../entities/[world, scene, person, location]
 import ../common/prompt
+import location_generator
+import person_generator
 
 # Персонаж с действиями
 type PersonWithActions = object
@@ -26,6 +27,8 @@ type GameMaster* = object
 
 # История сцены которую будет рассказывать мастер
 type SceneStoryBatch* = object
+    # Текст начала сцены
+    startGameText: string
     # Мастер игры
     gameMaster: GameMaster
     # Персонаж с действиями
@@ -34,6 +37,10 @@ type SceneStoryBatch* = object
 # Оператор для вывода мастера игры
 proc `$`*(gm:GameMaster): string =
     return fmt"Мастер игры: {gm.world}"
+
+# Получает текст начала сцены
+proc getStartGameText*(ssb: SceneStoryBatch): string =
+    return ssb.startGameText
 
 # Рассказывает про действия персонажей
 proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string =
@@ -73,27 +80,37 @@ proc newGameMaster*(world:World, currentScene:Scene):GameMaster =
     result = GameMaster(world: world, currentScene: currentScene)
 
 # Запускает игру и возвращает описание сцены
-proc startGame*(gm:GameMaster):string =
+proc startGame*(gm: var GameMaster):SceneStoryBatch =
     let ai = ai_api.get()
-    var systemPrompt = newPrompt()
-    systemPrompt.addLine("Ты мастер игры. Ты отвечаешь за проведение сцены.")    
+
+    # Создает описание локации
+    let locationDescription = createLocationDescription(gm.currentScene.currentLocation, maxTokens = 500)        
+    gm.currentScene.currentLocation.description = locationDescription
     
-    var scenePrompt = gm.currentScene.getPrompt()
-    scenePrompt.addLine(fmt"Игра начинается. Кратко расскажи где происходит действие. Расскажи про персонажей.")
-    let completeResult = ai.complete(systemPrompt, scenePrompt, some(CompleteOptions(
+    var systemPrompt: Prompt = newPrompt()
+    systemPrompt.addLine("Do not use markdown, only plain text")
+
+    var scenePrompt: Prompt = gm.currentScene.getPrompt()
+    scenePrompt.addLine(fmt"Художественно опиши начало сцены и персонажей без действий персонажей. Опиши главного персонажа.")
+    let completeResult: string = ai.complete(systemPrompt, scenePrompt, some(CompleteOptions(
         temperature: some(0.08),
-        maxTokens: some(500),
+        maxTokens: some(800),
         stream: some(false)
     )))
-    return completeResult
+
+    return SceneStoryBatch(
+        startGameText: completeResult,
+        gameMaster: gm,
+        personWithActions: @[]
+    )
 
 # Начинает сцену
 # Кидает инициативу персонажам
 # Сортирует персонажей по инициативе
-proc beginScene*(gm:GameMaster) : SceneStoryBatch =
+proc beginScene*(ssb: var SceneStoryBatch) =
     # Кидает инициативу персонажам
     var persWithInitiative = newSeq[(Person, int)]()
-    for pers in gm.currentScene.currentPersons:
+    for pers in ssb.gameMaster.currentScene.currentPersons:
         persWithInitiative.add((pers, pers.throwInitiative()))
 
     # Сортирует персонажей по инициативе
@@ -110,18 +127,15 @@ proc beginScene*(gm:GameMaster) : SceneStoryBatch =
         persWithActions.add(
             PersonWithActions(
                 person: pers[0], 
-                action: gm.getPersonActions(pers[0])))
-
-    return SceneStoryBatch(
-        gameMaster: gm,
-        personWithActions: persWithActions)
+                action: ssb.gameMaster.getPersonActions(pers[0])))
+    
+    ssb.personWithActions = persWithActions
 
 # Устанавливает ввод пользователя
-proc setUserInput*(ssb:SceneStoryBatch, input: string) =
+proc setUserInput*(ssb: var SceneStoryBatch, input: string) =
     # Разбивает ввод на атомарные действия
-
     discard
 
 # Завершает сцену и возвращает историю сцены
-proc endScene*(ssb:SceneStoryBatch) : string =
+proc endScene*(ssb: var SceneStoryBatch) : string =
     discard
