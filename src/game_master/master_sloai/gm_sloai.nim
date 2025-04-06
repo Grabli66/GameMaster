@@ -109,15 +109,11 @@ proc startGame*(gm: var GameMaster):SceneStoryBatch =
     # Создает описание локации
     let locationDescription = createLocationDescription(gm.ai, gm.currentScene.currentLocation, maxTokens = 500)        
     gm.currentScene.currentLocation.description = locationDescription
-    
-    var systemPrompt: Prompt = newPrompt()
-    systemPrompt.addLine("Do not use markdown, only plain text")
-
+        
     var scenePrompt: Prompt = getScenePrompt(gm.currentScene)
     scenePrompt.addLine(fmt"Художественно опиши начало сцены и персонажей без действий персонажей. Опиши главного персонажа.")
-    let completeResult: string = gm.ai.api.complete(gm.ai.model, systemPrompt, scenePrompt, some(CompleteOptions(
-        temperature: some(0.08),
-        maxTokens: some(10000),
+    let completeResult: string = gm.ai.api.complete(gm.ai.model, @[], @[scenePrompt.toString()], some(CompleteOptions(
+        temperature: some(0.0),
         stream: some(false)
     )))
 

@@ -13,7 +13,7 @@ proc createLocationDescription*(ai: ApiWithModel, location: Location, maxTokens:
     userPrompt.addLine("Опиши как выглядит локация изнутри и снаружи.")
     let completeResult = ai.api.complete(ai.model, systemPrompt, userPrompt, some(CompleteOptions(
         maxTokens: some(maxTokens),
-        temperature: some(0.08),
+        temperature: some(0.0),
         stream: some(false)
     )))
     return completeResult

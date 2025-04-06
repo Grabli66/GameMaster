@@ -80,18 +80,19 @@ proc complete*(
         systemPrompt.debug()
         echo "Пользовательский prompt:"
         userPrompt.debug()
-
-    for prompt in systemPrompt:        
-        messages.add(%* {"role": "system", "content": prompt})
     
-    for prompt in userPrompt:
-        messages.add(%* {"role": "user", "content": prompt})
+    if systemPrompt.len > 0:
+        for prompt in systemPrompt:
+            messages.add(%* {"role": "system", "content": prompt})
+    
+    if userPrompt.len > 0:        
+        for prompt in userPrompt:
+            messages.add(%* {"role": "user", "content": prompt})
 
     var requestBody = %* {
         "model": model,
         "messages": messages,
         "temperature": DEFAULT_TEMPERATURE,
-        "max_tokens": DEFAULT_MAX_TOKENS,
         "stream": DEFAULT_STREAM
     }
 
