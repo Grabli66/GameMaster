@@ -4,9 +4,10 @@ import random
 import strformat
 import strutils
 
-import ../ai_api/[types, ai_api]
-import ../entities/person
-import ../common/prompt
+import ../../ai_api/openai_api
+import ../../entities/person
+import ../../common/prompt  
+import types
 
 # Получает prompt для персонажа
 proc getPersonPrompt*(pers: Person): Prompt =
@@ -31,11 +32,10 @@ proc throwInitiative*(person: Person): int =
     return rand(100)
 
 # Создает произвольного персонажа
-proc createRandomPerson*() : Person =
-    let ai = ai_api.get()
+proc createRandomPerson*(ai: ApiWithModel) : Person =
     var prompt = newPrompt()
     prompt.addLine("Придумай произвольного персонажа: имя фамилию отчество, возраст, характер(список максимум из 5 слов), мотивация(список максимум из 5 слов), память(список максимум из 5 слов)")
-    let completeResult = ai.complete(@["Ты рассказчик"], prompt, some(
+    let completeResult = ai.api.complete(ai.model, @["Ты рассказчик"], prompt, some(
         CompleteOptions(
             structuredResponse: some(
                 %* {

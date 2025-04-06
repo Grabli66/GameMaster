@@ -1,6 +1,5 @@
 import httpclient
 import json
-import types
 import options
 import strformat
 
@@ -18,20 +17,21 @@ const
   # Константа для успешного HTTP статуса
   HTTP_STATUS_OK* = "200 OK"
 
+# Структура опций для запроса завершения
+type CompleteOptions* = object
+    # Опция для структурированного ответа
+    structuredResponse*: Option[JsonNode]
+    # Опция для температуры генерации
+    temperature*: Option[float]
+    # Опция для максимального количества токенов
+    max_tokens*: Option[int]
+    # Опция для стриминга ответа
+    stream*: Option[bool]
+
 # Тип для работы с OpenAI API
-type OpenAiApi = object
-    # Модель для генерации текста
-    model: string
+type OpenAiApi* = object
     # Базовый URL API
     baseUrl: string
-
-# Допустимые модели
-let allowedModels = @[
-    "gemma-3-4b-it",
-    "aya-23-8b",
-    "hermes-3-llama-3.1-8b",
-    "ruadaptqwen2.5-14b-instruct-1m"
-]
 
 # Получает HTTP клиент
 proc getClient(): HttpClient =
@@ -53,8 +53,8 @@ proc getCompletions(self: OpenAiApi, requestBody:string): string =
     let jsonResponse = parseJson(response.body)
     return jsonResponse["choices"][0]["message"]["content"].getStr()
 
-# Получает оптимальную модель для генерации текста
-proc getOptimalModel(self: OpenAiApi): Option[string] =
+# Получает список моделей
+proc getModels*(self: OpenAiApi): seq[string] =
     let client = getClient()
     let response = client.get(fmt"{self.baseUrl}/v1/models")  
     if response.status != HTTP_STATUS_OK:
@@ -63,14 +63,12 @@ proc getOptimalModel(self: OpenAiApi): Option[string] =
     let jsonResponse = parseJson(response.body)
     let models = jsonResponse["data"].getElems()
     for model in models:
-        if model["id"].getStr() in allowedModels:
-            return some(model["id"].getStr())
-
-    return none(string)
+        result.add(model["id"].getStr())
 
 # Завершает текст с помощью OpenAI API
-proc complete(
+proc complete*(
         self: OpenAiApi, 
+        model: string,
         systemPrompt: Prompt, 
         userPrompt: Prompt,
         options: Option[CompleteOptions]): string =
@@ -90,7 +88,7 @@ proc complete(
         messages.add(%* {"role": "user", "content": prompt})
 
     var requestBody = %* {
-        "model": self.model,
+        "model": model,
         "messages": messages,
         "temperature": DEFAULT_TEMPERATURE,
         "max_tokens": DEFAULT_MAX_TOKENS,
@@ -118,20 +116,9 @@ proc complete(
     return self.getCompletions($requestBody)
 
 # Создает новый API для работы с ИИ в формате с OpenAI
-proc newOpenAiApi*(baseUrl: string): IAiApi =    
+proc newOpenAiApi*(baseUrl: string): OpenAiApi =    
     var api = OpenAiApi(
-        baseUrl: baseUrl
+        baseUrl: baseUrl,
     )
 
-    let model = getOptimalModel(api)
-    if model.isNone:
-        raise newException(ValueError, "Не удалось получить оптимальную модель")
-
-    api.model = model.get()    
-    return IAiApi(
-        complete: proc(
-                systemPrompt: seq[string], 
-                userPrompt: seq[string], 
-                options: Option[CompleteOptions] = none(CompleteOptions)): string =
-            return complete(api, systemPrompt, userPrompt, options)
-    )
+    return api

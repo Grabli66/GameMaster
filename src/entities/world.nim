@@ -1,9 +1,5 @@
 import strformat
-import options
-import json
 
-import ../common/prompt
-import ../ai_api/[types, ai_api]
 import area
 import person
 

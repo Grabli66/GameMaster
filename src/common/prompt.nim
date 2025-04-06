@@ -1,5 +1,3 @@
-import strformat
-
 # Тип для prompt
 type Prompt* = seq[string]
 

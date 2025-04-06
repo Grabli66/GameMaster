@@ -1,14 +1,16 @@
+# Модуль для мастера игры основанного на локальных небольших моделях LLM (Small Local OpenAI API)
+
 import strformat
 import options
 import algorithm
-import json
 
-import ../ai_api/[types, ai_api]
-import ../entities/[world, scene, person, location]
-import ../common/prompt
+import ../../ai_api/openai_api
+import ../../entities/[world, scene, person, location]
+import ../../common/prompt
 import location_generator
 import person_generator
 import scene_generator
+import types
 
 # Персонаж с действиями
 type PersonWithActions = object
@@ -19,6 +21,8 @@ type PersonWithActions = object
 
 # Тип для мастера игры
 type GameMaster* = object
+    # AI API
+    ai: ApiWithModel
     # Мир
     world:World        
     # Текущая сцена
@@ -35,6 +39,12 @@ type SceneStoryBatch* = object
     # Персонаж с действиями
     personWithActions: seq[PersonWithActions]    
 
+# Допустимые модели
+const allowedModels = @[
+    "gemma-3-4b-it",
+    "ruadaptqwen2.5-14b-instruct-1m"
+]
+
 # Оператор для вывода мастера игры
 proc `$`*(gm:GameMaster): string =
     return fmt"Мастер игры: {gm.world}"
@@ -45,7 +55,6 @@ proc getStartGameText*(ssb: SceneStoryBatch): string =
 
 # Рассказывает про действия персонажей
 proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string =
-    let ai = ai_api.get()
     var systemPrompt = newPrompt()
     systemPrompt.addLine("Ты мастер игры. Ты отвечаешь за проведение сцены.")
 
@@ -59,10 +68,13 @@ proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string
 
 # Получает ощущения персонажа
 proc getSensoryPersonPerception(gm:GameMaster, person: Person): string =
-    let ai = ai_api.get()
     let systemPrompt = getPersonPrompt(person)    
     var prompt = getScenePrompt(gm.currentScene)
-    let completeResult = ai.complete(systemPrompt, prompt)
+    let completeResult = gm.ai.api.complete(gm.ai.model, systemPrompt, prompt, some(CompleteOptions(
+        temperature: some(0.08),
+        maxTokens: some(500),
+        stream: some(false)
+    )))
     return completeResult
 
 # Тип для действий персонажа
@@ -77,15 +89,25 @@ proc getPersonActions(gm:GameMaster, pers: Person): seq[PersonAction] =
     return @[] #actions
 
 # Создает нового мастера игры
-proc newGameMaster*(world:World, currentScene:Scene):GameMaster =
-    result = GameMaster(world: world, currentScene: currentScene)
+proc newGameMaster*(ai: OpenAiApi, world:World, currentScene:Scene):GameMaster =
+    let models = ai.getModels()
+    var model: string
+    for allowedModel in allowedModels:
+        if allowedModel in models:
+            model = allowedModel
+            break
+    
+    if model.len == 0:
+        raise newException(ValueError, "Не найдена подходящая модель")
+    
+    let apiWithModel = ApiWithModel(model: model, api: ai)
+
+    result = GameMaster(ai: apiWithModel, world: world, currentScene: currentScene)
 
 # Запускает игру и возвращает описание сцены
 proc startGame*(gm: var GameMaster):SceneStoryBatch =
-    let ai = ai_api.get()
-
     # Создает описание локации
-    let locationDescription = createLocationDescription(gm.currentScene.currentLocation, maxTokens = 500)        
+    let locationDescription = createLocationDescription(gm.ai, gm.currentScene.currentLocation, maxTokens = 500)        
     gm.currentScene.currentLocation.description = locationDescription
     
     var systemPrompt: Prompt = newPrompt()
@@ -93,7 +115,7 @@ proc startGame*(gm: var GameMaster):SceneStoryBatch =
 
     var scenePrompt: Prompt = getScenePrompt(gm.currentScene)
     scenePrompt.addLine(fmt"Художественно опиши начало сцены и персонажей без действий персонажей. Опиши главного персонажа.")
-    let completeResult: string = ai.complete(systemPrompt, scenePrompt, some(CompleteOptions(
+    let completeResult: string = gm.ai.api.complete(gm.ai.model, systemPrompt, scenePrompt, some(CompleteOptions(
         temperature: some(0.08),
         maxTokens: some(10000),
         stream: some(false)

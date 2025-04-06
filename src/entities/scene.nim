@@ -1,11 +1,10 @@
-import strformat
 import times
+import strformat
 
 import world
 import person
 import area
 import location
-import ../common/prompt
 
 # Сцена для game master
 type Scene* = object
@@ -22,7 +21,7 @@ type Scene* = object
     # Текущее местоположение
     currentLocation*: Location
     # Текущие персонажи
-    currentPersons*: seq[Person]   
+    currentPersons*: seq[Person]
 
 # Оператор для вывода сцены
 proc `$`*(scene: Scene): string =

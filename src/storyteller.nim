@@ -1,7 +1,8 @@
 import times
 
 import entities/[person, world, area, scene, location, coordinates]
-import gamemaster/gamemaster
+import game_master/master_sloai/gm_sloai as gamemaster
+import ai_api/openai_api
 
 when isMainModule:
     let wrld = newWorld("Наш реальный мир 2025 года", @[
@@ -27,7 +28,10 @@ when isMainModule:
             memory = @["Пришла после работы в магазин купить еду, потому что дома нет еды"]),
     ])
 
-    var gm = newGameMaster(
+    let ai = openai_api.newOpenAiApi("http://localhost:1234")
+
+    var gm = gamemaster.newGameMaster(
+        ai,
         wrld, 
         newScene(
             "Сцена 1", 
