@@ -19,6 +19,8 @@ type Person* = object
     isMain*: bool
     # Имя персонажа
     name*: string
+    # Пол персонажа
+    sex*: string
     # Возраст персонажа
     age*: int
     # Внешность персонажа
@@ -34,6 +36,7 @@ type Person* = object
 proc newPerson*(
         isMain:bool,
         name:string, 
+        sex:string,
         age:int, 
         look:string,
         character:seq[string], 
@@ -42,6 +45,7 @@ proc newPerson*(
     result = Person(
         isMain: isMain,
         name: name, 
+        sex: sex,
         age: age, 
         look: look,
         character: character, 

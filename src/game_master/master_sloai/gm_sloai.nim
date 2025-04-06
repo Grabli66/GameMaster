@@ -3,13 +3,14 @@
 import strformat
 import options
 import algorithm
+import strutils
 
 import ../../ai_api/openai_api
 import ../../entities/[world, scene, person, location]
 import ../../common/prompt
-import location_generator
-import person_generator
-import scene_generator
+import location_tool
+import person_tool
+import scene_tool
 import types
 
 # Персонаж с действиями
@@ -21,8 +22,8 @@ type PersonWithActions = object
 
 # Тип для мастера игры
 type GameMaster* = object
-    # AI API
-    ai: ApiWithModel
+    # API с моделями
+    api: ApiWithModels
     # Мир
     world:World        
     # Текущая сцена
@@ -33,25 +34,18 @@ type GameMaster* = object
 # История сцены которую будет рассказывать мастер
 type SceneStoryBatch* = object
     # Текст начала сцены
-    startGameText: string
-    # Мастер игры
-    gameMaster: GameMaster
+    startGameText*: string
     # Персонаж с действиями
-    personWithActions: seq[PersonWithActions]    
+    personWithActions*: seq[PersonWithActions]    
 
-# Допустимые модели
-const allowedModels = @[
-    "gemma-3-4b-it",
-    "ruadaptqwen2.5-14b-instruct-1m"
+# Необходимые модели
+const neededModels = @[
+    types.gemma34bIt,    
 ]
 
 # Оператор для вывода мастера игры
 proc `$`*(gm:GameMaster): string =
     return fmt"Мастер игры: {gm.world}"
-
-# Получает текст начала сцены
-proc getStartGameText*(ssb: SceneStoryBatch): string =
-    return ssb.startGameText
 
 # Рассказывает про действия персонажей
 proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string =
@@ -67,18 +61,20 @@ proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string
     return ""
 
 # Получает ощущения персонажа
-proc getSensoryPersonPerception(gm:GameMaster, person: Person): string =
-    let systemPrompt = getPersonPrompt(person)    
-    var prompt = getScenePrompt(gm.currentScene)
-    let completeResult = gm.ai.api.complete(gm.ai.model, systemPrompt, prompt, some(CompleteOptions(
-        temperature: some(0.08),
-        maxTokens: some(500),
+proc getSensoryPersonPerception(gm:GameMaster, person: Person): string =    
+    var userPrompt = newPrompt()
+    userPrompt.addLine(gm.currentScene.currentLocation.description)
+    userPrompt.addLine(fmt"Ты {getPersonPrompt(person).toString()}.")
+    userPrompt.addLine(fmt"Опиши что персонаж видит и чувствует в данный момент.")
+    let completeResult = gm.api.complete(types.gemma34bIt, @[], @[userPrompt.toString()], some(CompleteOptions(
+        temperature: some(0.0),
+        maxTokens: some(300),
         stream: some(false)
     )))
     return completeResult
 
 # Тип для действий персонажа
-proc getPersonActions(gm:GameMaster, pers: Person): seq[PersonAction] =
+proc getPersonActions(gm:GameMaster, ssb: SceneStoryBatch, pers: Person): seq[PersonAction] =
     let sensoryPerception= gm.getSensoryPersonPerception(pers)
     echo sensoryPerception
     # let prompt = "Придумай произвольные действия для персонажа " & person.Name & " " & $person.Age & " " & $person.Character    
@@ -91,52 +87,58 @@ proc getPersonActions(gm:GameMaster, pers: Person): seq[PersonAction] =
 # Создает нового мастера игры
 proc newGameMaster*(ai: OpenAiApi, world:World, currentScene:Scene):GameMaster =
     let models = ai.getModels()
-    var model: string
-    for allowedModel in allowedModels:
-        if allowedModel in models:
-            model = allowedModel
-            break
     
-    if model.len == 0:
-        raise newException(ValueError, "Не найдена подходящая модель")
+    # Проверяет наличие необходимых моделей
+    var foundModels = newSeq[string]()
+    for neededModel in neededModels:
+        if neededModel in models:
+            foundModels.add(neededModel)
     
-    let apiWithModel = ApiWithModel(model: model, api: ai)
+    if foundModels.len == 0:
+        raise newException(ValueError, "Не найдены необходимые модели. Требуются: " & neededModels.join(", "))            
 
-    result = GameMaster(ai: apiWithModel, world: world, currentScene: currentScene)
+    result = GameMaster(
+        api: ApiWithModels(api: ai, models: foundModels), 
+        world: world, 
+        currentScene: currentScene
+    )
 
 # Запускает игру и возвращает описание сцены
 proc startGame*(gm: var GameMaster):SceneStoryBatch =
     # Создает описание локации
-    let locationDescription = createLocationDescription(gm.ai, gm.currentScene.currentLocation, maxTokens = 500)        
+    let locationDescription = createLocationDescription(gm.api, gm.currentScene.currentLocation, maxTokens = 500)        
     gm.currentScene.currentLocation.description = locationDescription
         
+    # Создает описание сцены для вывода игроку
     var scenePrompt: Prompt = getScenePrompt(gm.currentScene)
     scenePrompt.addLine(fmt"Художественно опиши начало сцены и персонажей без действий персонажей. Опиши главного персонажа.")
-    let completeResult: string = gm.ai.api.complete(gm.ai.model, @[], @[scenePrompt.toString()], some(CompleteOptions(
+    let completeResult: string = gm.api.complete(types.gemma34bIt, @[], @[scenePrompt.toString()], some(CompleteOptions(
         temperature: some(0.0),
         stream: some(false)
     )))
 
     return SceneStoryBatch(
         startGameText: completeResult,
-        gameMaster: gm,
         personWithActions: @[]
     )
 
 # Начинает сцену
 # Кидает инициативу персонажам
 # Сортирует персонажей по инициативе
-proc beginScene*(ssb: var SceneStoryBatch) =
+proc beginScene*(gm: var GameMaster, ssb: var SceneStoryBatch) =
     # Кидает инициативу персонажам
     var persWithInitiative = newSeq[(Person, int)]()
-    for pers in ssb.gameMaster.currentScene.currentPersons:
+    for pers in gm.currentScene.currentPersons:
+        if pers.isMain:
+            persWithInitiative.add((pers, 0))
+
         persWithInitiative.add((pers, pers.throwInitiative()))
 
     # Сортирует персонажей по инициативе
     persWithInitiative.sort(proc(a, b: (Person, int)): int =
         return a[1] - b[1])
     
-    var persWithActions: seq[PersonWithActions] = newSeq[PersonWithActions]()
+    var persWithActions = newSeq[PersonWithActions]()
 
     for pers in persWithInitiative:
         # Прерывает цикл если персонаж главный
@@ -146,15 +148,15 @@ proc beginScene*(ssb: var SceneStoryBatch) =
         persWithActions.add(
             PersonWithActions(
                 person: pers[0], 
-                action: ssb.gameMaster.getPersonActions(pers[0])))
+                action: gm.getPersonActions(ssb, pers[0])))
     
     ssb.personWithActions = persWithActions
 
 # Устанавливает ввод пользователя
-proc setUserInput*(ssb: var SceneStoryBatch, input: string) =
+proc setUserInput*(gm: GameMaster, ssb: var SceneStoryBatch, input: string) =
     # Разбивает ввод на атомарные действия
     discard
 
 # Завершает сцену и возвращает историю сцены
-proc endScene*(ssb: var SceneStoryBatch) : string =
+proc endScene*(gm: GameMaster, ssb: var SceneStoryBatch) : string =
     discard

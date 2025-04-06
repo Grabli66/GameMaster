@@ -2,7 +2,7 @@ import strformat
 import times
 import ../../entities/scene
 import ../../common/prompt
-import person_generator
+import person_tool
 
 # Получает prompt для сцены
 proc getScenePrompt*(scene: Scene): Prompt =

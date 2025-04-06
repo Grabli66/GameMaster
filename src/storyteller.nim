@@ -14,6 +14,7 @@ when isMainModule:
             isMain = false,
             name = "Елена Сергеевна Морозова", 
             age = 46, 
+            sex = "женщина",
             look = "Высокая, худощавая, с короткими черными волосами",
             character = @["Нервная", "Смелая", "Грубая"], 
             motivation = @["Выжить" ,"Уйти быстрее с работы"], 
@@ -22,6 +23,7 @@ when isMainModule:
             isMain = true,
             name = "Краснова Инна Васильевна", 
             age = 32, 
+            sex = "женщина",
             look = "Высокая, худощавая, с короткими черными волосами",
             character = @["Добрая", "Слабая", "Смелая"], 
             motivation = @["Выжить" ,"Купить еды"], 
@@ -44,15 +46,15 @@ when isMainModule:
     
     # Начинает игру и выводит начало сцены
     var ssb = gm.startGame()
-    echo ssb.getStartGameText()    
+    echo ssb.startGameText    
 
-    # while true:
-    #     # Итерирует сцену и выводит происходящее на ней
-    #     ssb.beginScene()
-    #     let input = readLine(stdin)
-    #     if input == "exit":
-    #         break
+    while true:
+        # Итерирует сцену и выводит происходящее на ней
+        gm.beginScene(ssb)
+        let input = readLine(stdin)
+        if input == "exit":
+            break
 
-    #     ssb.setUserInput(input)
-    #     let story = ssb.endScene()
-    #     echo story
+        gm.setUserInput(ssb, input)
+        let story = gm.endScene(ssb)
+        echo story

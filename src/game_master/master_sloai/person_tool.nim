@@ -10,14 +10,16 @@ import ../../common/prompt
 import types
 
 # Получает prompt для персонажа
-proc getPersonPrompt*(pers: Person): Prompt =
+proc getPersonPrompt*(pers: Person, showName: bool = true): Prompt =
     var prompt = newPrompt()
-    if pers.isMain:
-        prompt.addLine(fmt"{pers.name} (главный персонаж)")
-    else:
-        prompt.addLine(fmt"{pers.name}")
+    if showName:
+        if pers.isMain:
+            prompt.addLine(fmt"{pers.name} (главный персонаж)")
+        else:
+            prompt.addLine(fmt"{pers.name}")
 
     prompt.addLine(fmt"Возраст: {pers.age}")
+    prompt.addLine(fmt"Пол: {pers.sex}")
     let character = pers.character.join(", ")
     prompt.addLine(fmt"Внешность: {pers.look}")
     prompt.addLine(fmt"Характер: {character}")
@@ -32,10 +34,10 @@ proc throwInitiative*(person: Person): int =
     return rand(100)
 
 # Создает произвольного персонажа
-proc createRandomPerson*(ai: ApiWithModel) : Person =
+proc createRandomPerson*(ai: ApiWithModels) : Person =
     var prompt = newPrompt()
     prompt.addLine("Придумай произвольного персонажа: имя фамилию отчество, возраст, характер(список максимум из 5 слов), мотивация(список максимум из 5 слов), память(список максимум из 5 слов)")
-    let completeResult = ai.api.complete(ai.model, @["Ты рассказчик"], prompt, some(
+    let completeResult = ai.api.complete(types.gemma34bIt, @["Ты рассказчик"], prompt, some(
         CompleteOptions(
             structuredResponse: some(
                 %* {
