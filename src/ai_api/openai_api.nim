@@ -33,6 +33,13 @@ type OpenAiApi* = object
     # Базовый URL API
     baseUrl: string
 
+# Доступ к API с моделями
+type ApiWithModels* = object
+    # Установленные модели
+    models*: seq[string]
+    # API
+    api*: OpenAiApi
+
 # Получает HTTP клиент
 proc getClient(): HttpClient =
     result = newHttpClient()

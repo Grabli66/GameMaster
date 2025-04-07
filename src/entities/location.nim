@@ -1,7 +1,4 @@
-import strformat
-
 import coordinates
-import ../common/prompt
 
 # Тип для местоположения
 type Location* = object
@@ -19,9 +16,3 @@ proc newLocation*(name:string, description:string, coordinates:Coordinates): Loc
 # Клонирует местоположение с новым описанием
 proc cloneWithDescription*(location: Location, description: string): Location =
     result = Location(name: location.name, description: description, coordinates: location.coordinates)
-
-# Получает prompt для местоположения
-proc getPrompt*(location: Location): Prompt =
-    var prompt = newPrompt()
-    prompt.addLine(fmt"Местоположение: {location.name}. {location.description}")
-    return prompt

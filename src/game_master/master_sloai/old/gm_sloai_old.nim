@@ -6,26 +6,19 @@ import algorithm
 import strutils
 
 import ../../ai_api/openai_api
-import ../../entities/[world, scene, person, location]
-import ../../common/prompt
+import ../../entities/[world, scene, person, location, game_book]
+import ../../common/text
 import location_tool
 import person_tool
 import scene_tool
 import types
 
-# Персонаж с действиями
-type PersonWithActions = object
-    # Персонаж
-    person: Person
-    # Действия персонажа
-    action: seq[PersonAction]
-
 # Тип для мастера игры
 type GameMaster* = object
     # API с моделями
     api: ApiWithModels
-    # Мир
-    world:World        
+    # Записная книга
+    notebook: GameBook
     # Текущая сцена
     currentScene:Scene
     # Текущий Ввод пользователя
@@ -42,10 +35,6 @@ type SceneStoryBatch* = object
 const neededModels = @[
     types.gemma34bIt,    
 ]
-
-# Оператор для вывода мастера игры
-proc `$`*(gm:GameMaster): string =
-    return fmt"Мастер игры: {gm.world}"
 
 # Рассказывает про действия персонажей
 proc tellActions*(gm:GameMaster, persWithActions: seq[PersonWithActions]):string =

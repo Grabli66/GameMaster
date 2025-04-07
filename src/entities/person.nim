@@ -1,17 +1,27 @@
+import ../common/text
+
 # Тип для видов действий персонажа
 type PersonActionKind* = enum
     # Действие, которое требует ответа от игрока
     talk
-    # Действие, которое не требует ответа от игрока
+    # Действие за исключением разговора, передвижения, сна
     action
+    # Действие передвижения
+    move
+    # Действие сна
+    sleep
 
 # Тип для действий персонажа
 type PersonAction* = object
-    case kind: PersonActionKind
+    case kind: PersonActionKind    
     of PersonActionKind.talk:
-        talk: string
+        talk: string    
     of PersonActionKind.action:
         action: string
+    of PersonActionKind.move:
+        move: string
+    of PersonActionKind.sleep:
+        sleep: string
 
 # Тип персонажа
 type Person* = object
@@ -30,7 +40,14 @@ type Person* = object
     # Мотивация персонажа: инстинкты, желания, цели
     motivation*: seq[string]
     # Память персонажа
-    memory*: seq[string]
+    memory*: seq[Text]
+
+# Персонаж с действиями
+type PersonWithActions* = object
+    # Персонаж
+    person: Person
+    # Действия персонажа
+    action: seq[PersonAction]
 
 # Создает нового персонажа
 proc newPerson*(
@@ -41,7 +58,7 @@ proc newPerson*(
         look:string,
         character:seq[string], 
         motivation:seq[string], 
-        memory:seq[string]):Person =
+        memory:seq[Text]):Person =
     result = Person(
         isMain: isMain,
         name: name, 

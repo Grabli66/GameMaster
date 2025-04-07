@@ -1,31 +1,43 @@
 import options
 
-import ../../common/prompt
 import ../../ai_api/openai_api
+import ../../entities/game_book
+import ../../common/text
+import ./experts/story_teller_expert
+import ./experts/person_expert
+import ./experts/player_action_expert
+import ./experts/location_expert
 
-# Модель Gemma 3.4b IT
-const gemma34bIt* = "gemma-3-4b-it"
+type
+  # Тип эксперта
+  ExpertType* = enum
+    # Эксперт по рассказыванию историй
+    etStoryTeller
+    # Эксперт по мотивации персонажа
+    etPersonMotivation
+    # Эксперт по действиям игрока
+    etPlayerAction
+    # Эксперт по местоположению
+    etLocation
 
-# Доступ к API с моделями
-type ApiWithModels* = object
-    # Установленные модели
-    models*: seq[string]
-    # API
-    api*: OpenAiApi
+# Настройки мастера игры
+type GameMasterSloaiSettings* = object
+    # API с моделями
+    apis*: seq[ApiWithModels]
+    # Книга с историей и правилами игры
+    gameBook*: GameBook
+    # Эксперт по рассказыванию историй
+    storyTellerExpert*: Option[StoryTellerExpert]
+    # Эксперт по мотивации персонажа
+    personMotivationExpert*: Option[PersonExpert]
+    # Эксперт по действиям игрока
+    playerActionExpert*: Option[PlayerActionExpert]
+    # Эксперт по местоположению
+    locationExpert*: Option[LocationExpert] 
 
-# Получает список моделей
-template getModels*(self: ApiWithModels): seq[string] =
-    self.api.getModels()
-
-# Завершает текст с помощью API
-template complete*(
-        self: ApiWithModels, 
-        model: string, 
-        systemPrompt: Prompt, 
-        userPrompt: Prompt, 
-        options: Option[CompleteOptions]): string =
-    self.api.complete(model, systemPrompt, userPrompt, options)
-
-# Проверяет наличие модели в списке моделей
-proc hasModel*(self: ApiWithModels, model: string): bool =
-    return model in self.models
+# История которую рассказывает мастер
+type Story* = object
+  # Текст истории
+  text*: seq[Text]
+  # Последний текст истории
+  lastText*: Text
