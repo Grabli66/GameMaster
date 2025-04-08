@@ -5,11 +5,11 @@ import std/options
 import ../../ai_api/openai_api
 import ../../entities/game_book
 import ../../common/text
-import ./experts/story_teller_expert
+import ./experts/storyteller_expert
 import ./experts/person_expert
 import ./experts/player_action_expert
 import ./experts/location_expert
-import ./types
+import ./common/[story, game_master_sloai_settings]
 
 # Мастер игры
 type GameMasterSloai* = object
@@ -30,13 +30,18 @@ type GameMasterSloai* = object
 
 # Создает новый экземпляр мастера игры
 proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
+    let storyTellerExpert = if settings.storyTellerExpert.isSome: settings.storyTellerExpert.get else: StoryTellerExpert()
+    let personMotivationExpert = if settings.personMotivationExpert.isSome: settings.personMotivationExpert.get else: PersonExpert()
+    let playerActionExpert = if settings.playerActionExpert.isSome: settings.playerActionExpert.get else: PlayerActionExpert()
+    let locationExpert = if settings.locationExpert.isSome: settings.locationExpert.get else: LocationExpert()
+
     result = GameMasterSloai(
         apis: settings.apis,
         noteBook: settings.gameBook,
-        storyTellerExpert: if settings.storyTellerExpert.isSome: settings.storyTellerExpert.get else: StoryTellerExpert(),
-        personMotivationExpert: if settings.personMotivationExpert.isSome: settings.personMotivationExpert.get else: PersonExpert(),
-        playerActionExpert: if settings.playerActionExpert.isSome: settings.playerActionExpert.get else: PlayerActionExpert(),
-        locationExpert: if settings.locationExpert.isSome: settings.locationExpert.get else: LocationExpert(),
+        storyTellerExpert: storyTellerExpert,
+        personMotivationExpert: personMotivationExpert,
+        playerActionExpert: playerActionExpert,
+        locationExpert: locationExpert,
         story: Story(
             text: @[],
             lastText: newText(),
@@ -44,8 +49,12 @@ proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
         )
     )
 
-# Начинает игру, создает эпилог и описывает начальную сцену
-proc startGame*(gm: GameMasterSloai): Story =
+# Начинает игру, создает пролог и описывает начальную сцену
+proc startGame*(gm: var GameMasterSloai): Story =   
+    # Рассказчик историй создает пролог
+    let prologue = gm.storyTellerExpert.createPrologue(gm.noteBook, gm.story)
+    gm.story.text.add(prologue)
+    gm.story.lastText = prologue
     return gm.story
 
 # Итерирует сцену и возвращает историю с обновленным текстом

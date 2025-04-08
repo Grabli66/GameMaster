@@ -3,9 +3,15 @@ import strutils
 # Тип для prompt
 type Text* = seq[string]
 
-# Создает новый prompt
-proc newText*(): Text =
-    return @[]
+# Создает новый text из строки
+proc newText*(text: string): Text =
+    return @[text]
+
+# Создает новый text из нескольких строк
+proc newText*(texts: varargs[string]): Text =
+    result = @[]
+    for text in texts:
+        result.add(text)
 
 # Преобразует текст в строку
 proc toString*(text: Text): string =

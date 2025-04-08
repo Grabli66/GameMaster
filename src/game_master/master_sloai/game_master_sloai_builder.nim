@@ -2,12 +2,12 @@ import options
 
 import ../../ai_api/openai_api
 import ../../entities/game_book
-import ./experts/story_teller_expert
+import ./experts/storyteller_expert
 import ./experts/person_expert
 import ./experts/player_action_expert
 import ./experts/location_expert
 import ./game_master_sloai
-import ./types
+import ./common/game_master_sloai_settings
 
 # Билдер для мастера игры
 type GameMasterSloaiBuilder* = object

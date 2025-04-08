@@ -4,7 +4,7 @@ import options
 import strformat
 
 import ../common/settings
-import ../common/prompt
+import ../common/text
 
 # Константы по умолчанию для OpenAI API
 const
@@ -76,8 +76,8 @@ proc getModels*(self: OpenAiApi): seq[string] =
 proc complete*(
         self: OpenAiApi, 
         model: string,
-        systemPrompt: Prompt, 
-        userPrompt: Prompt,
+        systemPrompt: Text, 
+        userPrompt: Text,
         options: Option[CompleteOptions]): string =
 
     var messages: seq[JsonNode] = @[]

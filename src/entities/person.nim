@@ -36,11 +36,11 @@ type Person* = object
     # Внешность персонажа
     look*: string
     # Характеристики персонажа
-    character*: seq[string]
+    character*: Text
     # Мотивация персонажа: инстинкты, желания, цели
-    motivation*: seq[string]
+    motivation*: Text
     # Память персонажа
-    memory*: seq[Text]
+    memory*: Text
 
 # Персонаж с действиями
 type PersonWithActions* = object
@@ -56,9 +56,9 @@ proc newPerson*(
         sex:string,
         age:int, 
         look:string,
-        character:seq[string], 
-        motivation:seq[string], 
-        memory:seq[Text]):Person =
+        character:Text, 
+        motivation:Text, 
+        memory:Text):Person =
     result = Person(
         isMain: isMain,
         name: name, 

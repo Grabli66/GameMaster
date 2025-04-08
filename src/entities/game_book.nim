@@ -11,3 +11,12 @@ type GameBook* = object
     persons*: seq[Person]
     # Правила игры
     rules*: seq[string]
+
+# Создает новую книгу
+proc newGameBook*(name: string, world: World, persons: seq[Person], rules: seq[string]): GameBook =
+    result = GameBook(
+        name: name, 
+        world: world, 
+        persons: persons, 
+        rules: rules)
+
