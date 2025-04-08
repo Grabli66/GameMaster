@@ -52,7 +52,7 @@ proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
 # Начинает игру, создает пролог и описывает начальную сцену
 proc startGame*(gm: var GameMasterSloai): Story =   
     # Рассказчик историй создает пролог
-    let prologue = gm.storyTellerExpert.createPrologue(gm.noteBook, gm.story)
+    let prologue = gm.storyTellerExpert.createPrologue(gm.apis[0], gm.noteBook, gm.story)
     gm.story.text.add(prologue)
     gm.story.lastText = prologue
     return gm.story

@@ -5,8 +5,9 @@ import world
 import person
 import area
 import location
+import game_book
 
-# Сцена для game master
+# Сцена на которой происходит действие
 type Scene* = object
     # Имя сцены
     name*: string
@@ -14,25 +15,25 @@ type Scene* = object
     description*: string
     # Время сцены
     time*: DateTime
-    # Мир
-    world*: World
+    # Книга с историей
+    book*: GameBook
     # Текущая область
     currentArea*: Area
     # Текущее местоположение
     currentLocation*: Location
-    # Текущие персонажи
+    # Персонажи на сцене
     currentPersons*: seq[Person]
 
 # Оператор для вывода сцены
 proc `$`*(scene: Scene): string =
-    return fmt"Сцена: {scene.name} {scene.description} {scene.world} {scene.currentLocation} {scene.currentPersons}"
+    return fmt"Сцена: {scene.name} {scene.description} {scene.book} {scene.currentLocation} {scene.currentPersons}"
 
 # Создает новую сцену
 proc newScene*(
         name:string, 
         description:string, 
         time: DateTime,
-        world:World, 
+        book:GameBook, 
         currentArea:Area, 
         currentLocation:Location, 
         currentPersons:seq[Person]): Scene =
@@ -40,7 +41,7 @@ proc newScene*(
         name: name, 
         description: description, 
         time: time,
-        world: world, 
+        book: book, 
         currentArea: currentArea, 
         currentLocation: currentLocation, 
         currentPersons: currentPersons)

@@ -2,10 +2,7 @@ import options
 
 import ../../ai_api/openai_api
 import ../../entities/game_book
-import ./experts/storyteller_expert
-import ./experts/person_expert
-import ./experts/player_action_expert
-import ./experts/location_expert
+import ./experts/[storyteller_expert, quest_designer_expert, person_expert, player_action_expert, location_expert]
 import ./game_master_sloai
 import ./common/game_master_sloai_settings
 
@@ -22,6 +19,7 @@ proc newGameMasterSloaiBuilder*(dataSource: seq[ApiWithModels], book: GameBook):
         personMotivationExpert: none(PersonExpert),
         playerActionExpert: none(PlayerActionExpert),
         locationExpert: none(LocationExpert),
+        questDesignerExpert: none(QuestDesignerExpert),
         gameBook: book
     )
   )
@@ -41,6 +39,10 @@ proc setPlayerActionExpert*(builder: var GameMasterSloaiBuilder, expert: PlayerA
 # Добавляет эксперта по местоположению
 proc setLocationExpert*(builder: var GameMasterSloaiBuilder, expert: LocationExpert) =
   builder.settings.locationExpert = some(expert)
+
+# Добавляет эксперта по созданию квестов
+proc setQuestDesignerExpert*(builder: var GameMasterSloaiBuilder, expert: QuestDesignerExpert) =
+  builder.settings.questDesignerExpert = some(expert)
 
 # Создает и возвращает экземпляр GameMasterSloai
 proc build*(builder: GameMasterSloaiBuilder): GameMasterSloai =

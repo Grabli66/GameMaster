@@ -2,10 +2,7 @@ import std/options
 
 import ../../../entities/game_book
 import ../../../ai_api/openai_api
-import ../experts/storyteller_expert
-import ../experts/person_expert
-import ../experts/player_action_expert
-import ../experts/location_expert
+import ../experts/[storyteller_expert, quest_designer_expert, person_expert, player_action_expert, location_expert]
 
 # Настройки мастера игры
 type GameMasterSloaiSettings* = object
@@ -21,3 +18,5 @@ type GameMasterSloaiSettings* = object
     playerActionExpert*: Option[PlayerActionExpert]
     # Эксперт по местоположению
     locationExpert*: Option[LocationExpert] 
+    # Эксперт по созданию квестов
+    questDesignerExpert*: Option[QuestDesignerExpert]
