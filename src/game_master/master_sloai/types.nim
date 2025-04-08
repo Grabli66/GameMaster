@@ -20,6 +20,17 @@ type
     # Эксперт по местоположению
     etLocation
 
+    # Состояние истории
+  StoryState* = enum
+    # Инициализация
+    ssInit
+    # Ввод игроком данных
+    ssInput
+    # Рассказ истории
+    ssStory
+    # Истории закончились
+    ssEnd
+
 # Настройки мастера игры
 type GameMasterSloaiSettings* = object
     # API с моделями
@@ -41,3 +52,5 @@ type Story* = object
   text*: seq[Text]
   # Последний текст истории
   lastText*: Text
+  # Состояние истории
+  state*: StoryState

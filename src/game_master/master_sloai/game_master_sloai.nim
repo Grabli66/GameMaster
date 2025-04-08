@@ -4,6 +4,7 @@ import std/options
 
 import ../../ai_api/openai_api
 import ../../entities/game_book
+import ../../common/text
 import ./experts/story_teller_expert
 import ./experts/person_expert
 import ./experts/player_action_expert
@@ -24,6 +25,8 @@ type GameMasterSloai* = object
     playerActionExpert*: PlayerActionExpert
     # Эксперт по местоположению
     locationExpert*: LocationExpert 
+    # История которую рассказывает мастер
+    story*: Story
 
 # Создает новый экземпляр мастера игры
 proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
@@ -33,13 +36,23 @@ proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
         storyTellerExpert: if settings.storyTellerExpert.isSome: settings.storyTellerExpert.get else: StoryTellerExpert(),
         personMotivationExpert: if settings.personMotivationExpert.isSome: settings.personMotivationExpert.get else: PersonExpert(),
         playerActionExpert: if settings.playerActionExpert.isSome: settings.playerActionExpert.get else: PlayerActionExpert(),
-        locationExpert: if settings.locationExpert.isSome: settings.locationExpert.get else: LocationExpert()
+        locationExpert: if settings.locationExpert.isSome: settings.locationExpert.get else: LocationExpert(),
+        story: Story(
+            text: @[],
+            lastText: newText(),
+            state: ssInit
+        )
     )
 
 # Начинает игру, создает эпилог и описывает начальную сцену
 proc startGame*(gm: GameMasterSloai): Story =
-    return Story()
+    return gm.story
 
 # Итерирует сцену и возвращает историю с обновленным текстом
 proc iterateScene*(gm: GameMasterSloai, story: Story): Story =
-    return Story()
+    # Обрабатывает ввод игроком данных
+    if story.state == ssInput:
+        return gm.story
+    # Рассказывает историю
+    else:
+        return gm.story

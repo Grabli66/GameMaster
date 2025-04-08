@@ -45,16 +45,15 @@ when isMainModule:
             wrld.persons))
     
     # Начинает игру и выводит начало сцены
-    var ssb = gm.startGame()
-    echo ssb.startGameText    
+    var story = gm.startGame()
+    echo story.lastText.toString()    
 
     while true:
         # Итерирует сцену и выводит происходящее на ней
-        gm.beginScene(ssb)
+        story = gm.iterateScene(story)
         let input = readLine(stdin)
         if input == "exit":
             break
 
-        gm.setUserInput(ssb, input)
-        let story = gm.endScene(ssb)
-        echo story
+        gm.setUserInput(story, input)
+        echo story.lastText.toString()
