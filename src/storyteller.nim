@@ -38,8 +38,7 @@ when isMainModule:
         rules = @[]
     )
     
-    var ai = openai_api.newOpenAiApi("https://openrouter.ai/api")
-    ai.addBearerToken("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")
+    var ai = openai_api.newOpenAiApi("https://openrouter.ai/api")    
 
     # let models = ai.getModels()
     let aiWithModels = newApiWithModels(ai, @["meta-llama/llama-4-maverick:free"])

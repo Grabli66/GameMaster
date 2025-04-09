@@ -27,6 +27,16 @@ proc newStoryTellerExpert*(apiCollection: ApiCollection): StoryTellerExpert =
 proc createPrologue*(self: StoryTellerExpert, gameBook: GameBook, story: Story): Text =
     # Создает описание сцены для вывода игроку
     var scenePrompt = newText()
+    
+    let time = gameBook.world.currentScene.time.format("dd.MM.yyyy HH:mm:ss")
+    scenePrompt.addLine(fmt"Сцена: {gameBook.world.currentScene.description}")
+    scenePrompt.addLine(fmt"Время: {time}")
+    scenePrompt.addLine(fmt"Область действия: {gameBook.world.currentScene.currentArea.description}")
+    scenePrompt.addLine(fmt"Место действия: {gameBook.world.currentScene.currentLocation.description}")
+    prompt.addLine(fmt"Персонажи:")
+    for pers in scene.currentPersons:
+        prompt.add(getPersonPrompt(pers))
+
     scenePrompt.addLine(fmt"Художественно опиши начало сцены и персонажей без действий персонажей. Опиши главного персонажа.")
     let completeResult: string = self.api.complete(self.model, @[], @[scenePrompt.toString()], some(CompleteOptions(
         temperature: some(0.0),
