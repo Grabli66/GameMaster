@@ -1,4 +1,5 @@
 import ../../../common/text
+import ../../../entities/scene
 
 # Состояние истории
 type  
@@ -13,10 +14,21 @@ type
         ssEnd
 
     # История которую рассказывает мастер
-    Story* = object
+    Story* = object    
+        # Состояние истории
+        state*: StoryState    
+        # Текущая сцена
+        currentScene*: Scene
         # Текст истории
         text*: seq[Text]
         # Последний текст истории
-        lastText*: Text
-        # Состояние истории
-        state*: StoryState
+        lastText*: Text          
+
+# Создает новую историю
+proc newStory*(scene: Scene): Story =
+    result = Story(
+        state: ssInit,
+        currentScene: scene,
+        text: @[],
+        lastText: newText()
+    )

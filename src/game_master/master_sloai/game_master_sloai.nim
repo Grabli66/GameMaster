@@ -6,7 +6,7 @@ import ../../ai_api/openai_api
 import ../../entities/game_book
 import ../../common/text
 import ./experts/storyteller_expert
-import ./experts/person_expert
+import ./experts/psychologist_expert
 import ./experts/player_action_expert
 import ./experts/location_expert
 import ./common/[story, game_master_sloai_settings]
@@ -19,8 +19,8 @@ type GameMasterSloai* = object
     noteBook*: GameBook
     # Эксперт по рассказыванию историй
     storyTellerExpert*: StoryTellerExpert
-    # Эксперт по мотивации персонажа
-    personMotivationExpert*: PersonExpert
+    # Эксперт по психологии людей, их мотивациям и поведению
+    psychologistExpert*: PsychologistExpert
     # Эксперт по действиям игрока
     playerActionExpert*: PlayerActionExpert
     # Эксперт по местоположению
@@ -31,22 +31,18 @@ type GameMasterSloai* = object
 # Создает новый экземпляр мастера игры
 proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
     let storyTellerExpert = if settings.storyTellerExpert.isSome: settings.storyTellerExpert.get else: newStoryTellerExpert(settings.apiCollection)
-    let personMotivationExpert = if settings.personMotivationExpert.isSome: settings.personMotivationExpert.get else: PersonExpert()
-    let playerActionExpert = if settings.playerActionExpert.isSome: settings.playerActionExpert.get else: PlayerActionExpert()
-    let locationExpert = if settings.locationExpert.isSome: settings.locationExpert.get else: LocationExpert()
+    let psychologistExpert = if settings.psychologistExpert.isSome: settings.psychologistExpert.get else: newPsychologistExpert(settings.apiCollection)
+    let playerActionExpert = if settings.playerActionExpert.isSome: settings.playerActionExpert.get else: newPlayerActionExpert(settings.apiCollection)
+    let locationExpert = if settings.locationExpert.isSome: settings.locationExpert.get else: newLocationExpert(settings.apiCollection)
 
     result = GameMasterSloai(
         apiCollection: settings.apiCollection,
         noteBook: settings.gameBook,
         storyTellerExpert: storyTellerExpert,
-        personMotivationExpert: personMotivationExpert,
+        psychologistExpert: psychologistExpert,
         playerActionExpert: playerActionExpert,
         locationExpert: locationExpert,
-        story: Story(
-            text: @[],
-            lastText: newText(),
-            state: ssInit
-        )
+        story: newStory(settings.startScene)
     )
 
 # Начинает игру, создает пролог и описывает начальную сцену

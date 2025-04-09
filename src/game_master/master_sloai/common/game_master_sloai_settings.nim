@@ -2,7 +2,8 @@ import std/options
 
 import ../../../entities/game_book
 import ../../../ai_api/openai_api
-import ../experts/[storyteller_expert, quest_designer_expert, person_expert, player_action_expert, location_expert]
+import ../../../entities/scene
+import ../experts/[storyteller_expert, quest_designer_expert, psychologist_expert, player_action_expert, location_expert]
 
 # Настройки мастера игры
 type GameMasterSloaiSettings* = object
@@ -10,10 +11,12 @@ type GameMasterSloaiSettings* = object
     apiCollection*: ApiCollection
     # Книга с историей и правилами игры
     gameBook*: GameBook
+    # Начальная сцена
+    startScene*: Scene
     # Эксперт по рассказыванию историй
     storyTellerExpert*: Option[StoryTellerExpert]
-    # Эксперт по мотивации персонажа
-    personMotivationExpert*: Option[PersonExpert]
+    # Эксперт по психологии людей, их мотивациям и поведению
+    psychologistExpert*: Option[PsychologistExpert]
     # Эксперт по действиям игрока
     playerActionExpert*: Option[PlayerActionExpert]
     # Эксперт по местоположению

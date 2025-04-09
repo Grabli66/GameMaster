@@ -1,3 +1,5 @@
+import times
+
 import entities/[person, world, area, scene, location, coordinates, game_book]
 import game_master/master_sloai/game_master_sloai as gm
 import game_master/master_sloai/game_master_sloai_builder as gmb
@@ -46,7 +48,14 @@ when isMainModule:
 
     let apiSources = newApiCollection(aiWithModels)
 
-    let gmBuilder = gmb.newGameMasterSloaiBuilder(apiSources, book)
+    let startScene = newScene(
+        "Сцена 1", 
+        "Инна в продуктовом магазине", 
+        dateTime(2025, mApr, 4, 17, 33, 0, 0, utc()),
+        wrld.areas[0], 
+        wrld.areas[0].locations[0], book.persons)
+
+    let gmBuilder = gmb.newGameMasterSloaiBuilder(apiSources, book, startScene)
     var gameMaster = gmBuilder.build()
     let story = gameMaster.startGame()
     echo story.lastText.toString()

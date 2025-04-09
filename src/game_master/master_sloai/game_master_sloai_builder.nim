@@ -2,7 +2,8 @@ import options
 
 import ../../ai_api/openai_api
 import ../../entities/game_book
-import ./experts/[storyteller_expert, quest_designer_expert, person_expert, player_action_expert, location_expert]
+import ../../entities/scene
+import ./experts/[storyteller_expert, quest_designer_expert, psychologist_expert, player_action_expert, location_expert]
 import ./game_master_sloai
 import ./common/game_master_sloai_settings
 
@@ -11,16 +12,17 @@ type GameMasterSloaiBuilder* = object
     settings: GameMasterSloaiSettings
 
 # Создает новый экземпляр билдера
-proc newGameMasterSloaiBuilder*(apiCollection: ApiCollection, book: GameBook): GameMasterSloaiBuilder =  
+proc newGameMasterSloaiBuilder*(apiCollection: ApiCollection, book: GameBook, startScene: Scene): GameMasterSloaiBuilder =  
   result = GameMasterSloaiBuilder(
     settings: GameMasterSloaiSettings(
         apiCollection: apiCollection,
         storyTellerExpert: none(StoryTellerExpert),
-        personMotivationExpert: none(PersonExpert),
+        psychologistExpert: none(PsychologistExpert),
         playerActionExpert: none(PlayerActionExpert),
         locationExpert: none(LocationExpert),
         questDesignerExpert: none(QuestDesignerExpert),
-        gameBook: book
+        gameBook: book,
+        startScene: startScene
     )
   )
 
@@ -28,9 +30,9 @@ proc newGameMasterSloaiBuilder*(apiCollection: ApiCollection, book: GameBook): G
 proc setStoryTellerExpert*(builder: var GameMasterSloaiBuilder, expert: StoryTellerExpert) =
   builder.settings.storyTellerExpert = some(expert)
 
-# Добавляет эксперта по мотивации персонажа
-proc setPersonMotivationExpert*(builder: var GameMasterSloaiBuilder, expert: PersonExpert) =
-  builder.settings.personMotivationExpert = some(expert)
+# Добавляет эксперта по психологии людей, их мотивациям и поведению
+proc setPsychologistExpert*(builder: var GameMasterSloaiBuilder, expert: PsychologistExpert) =
+  builder.settings.psychologistExpert = some(expert)
 
 # Добавляет эксперта по действиям игрока
 proc setPlayerActionExpert*(builder: var GameMasterSloaiBuilder, expert: PlayerActionExpert) =
