@@ -6,8 +6,8 @@ import ../experts/[storyteller_expert, quest_designer_expert, person_expert, pla
 
 # Настройки мастера игры
 type GameMasterSloaiSettings* = object
-    # API с моделями
-    apis*: seq[ApiWithModels]
+    # Источники API
+    apiCollection*: ApiCollection
     # Книга с историей и правилами игры
     gameBook*: GameBook
     # Эксперт по рассказыванию историй

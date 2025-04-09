@@ -9,3 +9,5 @@ bin           = @["storyteller"]
 binDir        = "out"
 
 requires "nim >= 2.2.2"
+
+switch "d", "ssl"

@@ -11,10 +11,10 @@ type GameMasterSloaiBuilder* = object
     settings: GameMasterSloaiSettings
 
 # Создает новый экземпляр билдера
-proc newGameMasterSloaiBuilder*(dataSource: seq[ApiWithModels], book: GameBook): GameMasterSloaiBuilder =  
+proc newGameMasterSloaiBuilder*(apiCollection: ApiCollection, book: GameBook): GameMasterSloaiBuilder =  
   result = GameMasterSloaiBuilder(
     settings: GameMasterSloaiSettings(
-        apis: dataSource,
+        apiCollection: apiCollection,
         storyTellerExpert: none(StoryTellerExpert),
         personMotivationExpert: none(PersonExpert),
         playerActionExpert: none(PlayerActionExpert),

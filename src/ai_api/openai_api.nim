@@ -2,6 +2,7 @@ import httpclient
 import json
 import options
 import strformat
+import sequtils
 
 import ../common/settings
 import ../common/text
@@ -32,6 +33,8 @@ type CompleteOptions* = object
 type OpenAiApi* = object
     # Базовый URL API
     baseUrl: string
+    # HTTP заголовки
+    headers: HttpHeaders
 
 # Доступ к API с моделями
 type ApiWithModels* = object
@@ -40,16 +43,35 @@ type ApiWithModels* = object
     # API
     api*: OpenAiApi
 
+# Источники API
+type ApiCollection* = object
+    # API с моделями
+    apiWithModels*: seq[ApiWithModels]    
+
+# Создает новый API с моделями
+proc newApiWithModels*(api: OpenAiApi, models: seq[string]): ApiWithModels =
+    return ApiWithModels(models: models, api: api)
+
+# Создает новый источник API
+proc newApiCollection*(apiWithModels: varargs[ApiWithModels]): ApiCollection =
+    return ApiCollection(apiWithModels: apiWithModels.toSeq())
+
+# Получает API для разрешенных моделей
+proc getApi*(self: ApiCollection, allowedModels: seq[string]): (OpenAiApi, string) =
+    for model in allowedModels:
+        for apiWithModel in self.apiWithModels:
+            if apiWithModel.models.contains(model):
+                return (apiWithModel.api, model)
+    raise newException(ValueError, "Модель не найдена")
+
 # Получает HTTP клиент
-proc getClient(): HttpClient =
+proc getClient(self: OpenAiApi): HttpClient =
     result = newHttpClient()
-    result.headers = newHttpHeaders({
-        "Content-Type": "application/json"
-    })
+    result.headers = self.headers
 
 # Получает ответ от OpenAI API
 proc getCompletions(self: OpenAiApi, requestBody:string): string =
-    let client = getClient()
+    let client = self.getClient()
     let response = client.post(self.baseUrl & "/v1/chat/completions", requestBody)
     if response.status != HTTP_STATUS_OK:
         raise newException(ValueError, fmt"API error: {response.body}")
@@ -62,7 +84,7 @@ proc getCompletions(self: OpenAiApi, requestBody:string): string =
 
 # Получает список моделей
 proc getModels*(self: OpenAiApi): seq[string] =
-    let client = getClient()
+    let client = self.getClient()
     let response = client.get(fmt"{self.baseUrl}/v1/models")  
     if response.status != HTTP_STATUS_OK:
         raise newException(ValueError, fmt"API error: {response.body}")
@@ -124,9 +146,21 @@ proc complete*(
     return self.getCompletions($requestBody)
 
 # Создает новый API для работы с ИИ в формате с OpenAI
-proc newOpenAiApi*(baseUrl: string): OpenAiApi =    
+proc newOpenAiApi*(baseUrl: string, headers: HttpHeaders = newHttpHeaders()): OpenAiApi =    
     var api = OpenAiApi(
         baseUrl: baseUrl,
+        headers: headers
     )
 
+    # Добавляет заголовок Content-Type
+    api.headers.add("Content-Type", "application/json")
     return api
+
+# Добавляет заголовок
+proc addHeader*(self: OpenAiApi, key: string, value: string) =
+    self.headers.add(key, value)
+
+# Добавляет заголовок Bearer Token
+proc addBearerToken*(self: OpenAiApi, token: string) =
+    self.headers.add("Authorization", "Bearer " & token)
+
