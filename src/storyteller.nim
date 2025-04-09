@@ -3,7 +3,7 @@ import game_master/master_sloai/game_master_sloai as gm
 import game_master/master_sloai/game_master_sloai_builder as gmb
 import ai_api/openai_api
 import common/text
-
+import common/privateSettings
 when isMainModule:
 
     let wrld = newWorld(description = "Наш реальный мир 2025 года", areas = @[
@@ -38,7 +38,8 @@ when isMainModule:
         rules = @[]
     )
     
-    var ai = openai_api.newOpenAiApi("https://openrouter.ai/api")    
+    var ai = openai_api.newOpenAiApi("https://openrouter.ai/api")
+    ai.addBearerToken(privateSettings.openRouterApiKey)
 
     # let models = ai.getModels()
     let aiWithModels = newApiWithModels(ai, @["meta-llama/llama-4-maverick:free"])
