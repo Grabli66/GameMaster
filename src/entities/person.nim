@@ -45,9 +45,9 @@ type Person* = object
 # Персонаж с действиями
 type PersonWithActions* = object
     # Персонаж
-    person: Person
+    person*: Person
     # Действия персонажа
-    action: seq[PersonAction]
+    actions*: seq[PersonAction]
 
 # Создает нового персонажа
 proc newPerson*(
@@ -68,3 +68,7 @@ proc newPerson*(
         character: character, 
         motivation: motivation, 
         memory: memory)
+
+# Создает нового персонажа с действиями
+proc newPersonWithActions*(person: Person, actions: seq[PersonAction]): PersonWithActions =
+    result = PersonWithActions(person: person, actions: actions)

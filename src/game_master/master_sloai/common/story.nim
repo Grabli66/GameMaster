@@ -1,5 +1,7 @@
 import ../../../common/text
 import ../../../entities/scene
+import ../../../entities/person
+import ./frame
 
 # Состояние истории
 type  
@@ -16,9 +18,11 @@ type
     # История которую рассказывает мастер
     Story* = object    
         # Состояние истории
-        state*: StoryState    
+        state*: StoryState
         # Текущая сцена
         currentScene*: Scene
+        # Текущий кадр
+        currentFrame*: Frame
         # Текст истории
         text*: seq[Text]
         # Последний текст истории

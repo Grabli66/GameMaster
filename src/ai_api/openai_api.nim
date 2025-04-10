@@ -72,7 +72,8 @@ proc getClient(self: OpenAiApi): HttpClient =
 # Получает ответ от OpenAI API
 proc getCompletions(self: OpenAiApi, requestBody:string): string =
     let client = self.getClient()
-    let response = client.post(self.baseUrl & "/v1/chat/completions", requestBody)
+    let url = self.baseUrl & "/v1/chat/completions"
+    let response = client.post(url, requestBody)    
     if response.status != HTTP_STATUS_OK:
         raise newException(ValueError, fmt"API error: {response.body}")
 

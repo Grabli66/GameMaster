@@ -1,10 +1,10 @@
 # Модуль для мастера игры основанного на локальных небольших моделях LLM (Small Local OpenAI API)
 
 import std/options
+import std/algorithm
 
 import ../../ai_api/openai_api
-import ../../entities/game_book
-import ../../common/text
+import ../../entities/[game_book, person]
 import ./experts/storyteller_expert
 import ./experts/psychologist_expert
 import ./experts/player_action_expert
@@ -54,10 +54,37 @@ proc startGame*(gm: var GameMasterSloai): Story =
     return gm.story
 
 # Итерирует сцену и возвращает историю с обновленным текстом
-proc iterateScene*(gm: GameMasterSloai, story: Story): Story =
+proc iterateScene*(gm: var GameMasterSloai): Story =    
     # Обрабатывает ввод игроком данных
-    if story.state == ssInput:
+    if gm.story.state == ssInput:
         return gm.story
     # Рассказывает историю
     else:
+        # Кидает иннициативу для всех персонажей
+        type PersonWithInitiative = object
+            initiative: int
+            person: Person
+
+        var personsWithInitiative = newSeq[PersonWithInitiative]()
+        for character in gm.story.currentScene.currentPersons:
+            let initiative = gm.psychologistExpert.getInitiative(character)
+            personsWithInitiative.add(PersonWithInitiative(initiative: initiative, person: character))
+
+        # Сортирует персонажей по инициативе чтобы определить кто из них ходит
+        personsWithInitiative.sort(proc(a, b: PersonWithInitiative): int = b.initiative - a.initiative)
+
+        # Проходит по всем персонажам, если персонаж главный то возвращает историю с состоянием ssInput
+        for personWithInitiative in personsWithInitiative:
+            if personWithInitiative.person.isMain:
+                gm.story.state = ssInput
+                return gm.story
+            else:
+                # Вызывает психолога, психолог анализирует что делает персонаж и возвращает действия персонажа
+                let actions = gm.psychologistExpert.getPersonActions(personWithInitiative.person)
+                gm.story.currentFrame.personsWithActions.add(newPersonWithActions(personWithInitiative.person, actions))
+
+        # Записывает в историю действия персонажа
+        # Передает действия персонажей рассказчику историй
+        # Рассказчик сочиняет текст истории
+        # Возвращает историю
         return gm.story
