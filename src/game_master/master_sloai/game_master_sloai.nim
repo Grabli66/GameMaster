@@ -46,18 +46,17 @@ proc newGameMasterSloai*(settings: GameMasterSloaiSettings): GameMasterSloai =
     )
 
 # Начинает игру, создает пролог и описывает начальную сцену
-proc startGame*(gm: var GameMasterSloai): Story =   
+proc startGame*(gm: var GameMasterSloai) =   
     # Рассказчик историй создает пролог
     let prologue = gm.storyTellerExpert.createPrologue(gm.noteBook, gm.story)
     gm.story.text.add(prologue)
     gm.story.lastText = prologue
-    return gm.story
 
 # Итерирует сцену и возвращает историю с обновленным текстом
-proc iterateScene*(gm: var GameMasterSloai): Story =    
+proc iterateScene*(gm: var GameMasterSloai) =    
     # Обрабатывает ввод игроком данных
     if gm.story.state == ssInput:
-        return gm.story
+        return
     # Рассказывает историю
     else:
         # Кидает иннициативу для всех персонажей
@@ -77,7 +76,7 @@ proc iterateScene*(gm: var GameMasterSloai): Story =
         for personWithInitiative in personsWithInitiative:
             if personWithInitiative.person.isMain:
                 gm.story.state = ssInput
-                return gm.story
+                return
             else:
                 # Вызывает психолога, психолог анализирует что делает персонаж и возвращает действия персонажа
                 let actions = gm.psychologistExpert.getPersonActions(personWithInitiative.person)
@@ -86,5 +85,3 @@ proc iterateScene*(gm: var GameMasterSloai): Story =
         # Записывает в историю действия персонажа
         # Передает действия персонажей рассказчику историй
         # Рассказчик сочиняет текст истории
-        # Возвращает историю
-        return gm.story

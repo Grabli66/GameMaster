@@ -58,15 +58,15 @@ when isMainModule:
     var gameMaster = gmBuilder.build()
            
     # Начинает игру и выводит начало сцены
-    var gameStory = gameMaster.startGame()
-    echo gameStory.lastText.toString()
+    gameMaster.startGame()
+    echo gameMaster.story.lastText.toString()
 
     while true:
         # Итерирует сцену и выводит происходящее на ней
-        gameStory = gameMaster.iterateScene()
-        if gameStory.state == StoryState.ssInput:
+        gameMaster.iterateScene()
+        if gameMaster.story.state == StoryState.ssInput:
             let input = readLine(stdin)
             if input == "exit":
                 break
         else:
-            echo gameStory.lastText.toString()
+            echo gameMaster.story.lastText.toString()
